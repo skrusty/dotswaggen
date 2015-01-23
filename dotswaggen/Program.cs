@@ -1,20 +1,20 @@
 ﻿using System;
-using System.Linq;
-using CommandLine;
-using DotLiquid;
-using dotswaggen.Swagger;
-using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Net;
+using CommandLine;
+using dotswaggen.Swagger;
+using DotLiquid;
+using Newtonsoft.Json;
 
 namespace dotswaggen
 {
-    class Program
+    internal class Program
     {
-
         private static Options _options;
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             // Load command line options
             _options = new Options();
@@ -23,24 +23,33 @@ namespace dotswaggen
             {
                 return;
             }
-            
+
             // TODO: Allow multiple files or input file directory
             ProcessFile(_options.InputFile);
-            
         }
 
         private static void ProcessFile(string inputFile)
         {
             // Load json file
             string json;
-            using (var webClient = new System.Net.WebClient())
+            using (var webClient = new WebClient())
             {
                 json = webClient.DownloadString(inputFile);
             }
 
             try
             {
-                var settings = new JsonSerializerSettings {MissingMemberHandling = MissingMemberHandling.Error};
+                var settings = new JsonSerializerSettings
+                {
+                    MissingMemberHandling = MissingMemberHandling.Error,
+                    Error = (sender, args) =>
+                    {
+                        Console.WriteLine(args.ErrorContext.Error.Message);
+                    }
+                };
+
+                // do some nasty hacks here because Json.NET reserves '$' for internal stuff
+                json = json.Replace("$ref", "ref");
 
                 // Parse Models
                 var swaggerResource = JsonConvert.DeserializeObject<ApiDeclaration>(json, settings);
@@ -59,7 +68,7 @@ namespace dotswaggen
                     var subType =
                         swaggerResource.Models.SingleOrDefault(
                             x => x.Value.SubTypes != null && x.Value.SubTypes.Contains(model.Key)).Key;
-                    var tempModel = new Model()
+                    var tempModel = new Model
                     {
                         Name = model.Key,
                         Resourceurl = inputFile,
@@ -72,11 +81,11 @@ namespace dotswaggen
                     {
                         if (prop.Value != null)
                         {
-                            var newProp = new ModelProperty()
+                            var newProp = new ModelProperty
                             {
                                 Description = prop.Value.Description,
                                 Name = prop.Key,
-                                Type = DataTypeRegistry.TypeLookup(prop.Value.Type)
+                                Type = DataTypeRegistry.TypeLookup(prop.Value.Type ?? prop.Value.Ref)
                             };
                             tempModel.Properties.Add(newProp);
                         }
@@ -100,7 +109,7 @@ namespace dotswaggen
                 template =
                     Template.Parse(
                         File.ReadAllText(string.Format("Templates\\{0}ActionTemplate.txt", _options.TemapltePrefix)));
-                var tmpModel = new ApiOperations()
+                var tmpModel = new ApiOperations
                 {
                     Resourceurl = inputFile,
                     Namespace = _options.Namespace,
@@ -126,7 +135,6 @@ namespace dotswaggen
             {
                 Console.WriteLine(ex.Message);
             }
-
         }
     }
 
@@ -141,7 +149,6 @@ namespace dotswaggen
     public class ApiOperations : TemplateProperties
     {
         public List<Api> Apis { get; set; }
-
     }
 
     public class Model : TemplateProperties

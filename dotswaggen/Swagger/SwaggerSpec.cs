@@ -132,6 +132,7 @@ namespace dotswaggen.Swagger
         [JsonProperty("tokenName")]
         public string TokenName { get; set; }
     }
+
     public class ApiDeclaration
     {
         [JsonProperty("swaggerVersion")]
@@ -272,7 +273,7 @@ namespace dotswaggen.Swagger
         [JsonProperty("type")]
         public string Type { get; set; }
 
-        [JsonProperty("$ref")]
+        [JsonProperty("ref")]
         public string Ref { get; set; }
 
         [JsonProperty("format")]
@@ -317,7 +318,7 @@ namespace dotswaggen.Swagger
             get { return DataTypeRegistry.TypeLookup(Type); }
         }
 
-        [JsonProperty("$ref")]
+        [JsonProperty("ref")]
         public string Ref { get; set; }
 
         [JsonProperty("format")]
@@ -343,7 +344,7 @@ namespace dotswaggen.Swagger
         it was modelled incorrectly and can't be fixed until the next major version of
         Swashbuckle due to backward-comptability
          */
-    
+
         [JsonProperty("id")]
         public string Id { get; set; }
 
