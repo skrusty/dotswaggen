@@ -19,7 +19,7 @@ namespace {{ Model.Namespace }}
 		/// <summary>
 		/// {{ property.Description }}
 		/// </summary>
-		public property {{ property.Type }} {{ property.Name }} { get; set; }
+		public {{ property.Type }} {{ property.Name }} { get; set; }
 	{% endfor -%}
 	
 	}
