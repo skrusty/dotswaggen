@@ -19,18 +19,18 @@ namespace {{ Model.Namespace }}
 
 		public {{ Model.Name }}(string uri, string username, string password){
 			this.Client = new RestClient(uri);
-            this.Client.Authenticator = new HttpBasicAuthenticator(username, password);
+			this.Client.Authenticator = new HttpBasicAuthenticator(username, password);
 		}
 
 		/// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        protected RestRequest GetNewRequest(string requestString, Method method)
-        {
-            RestRequest rtn = new RestRequest(requestString, method);
-            return rtn;
-        }
+		/// 
+		/// </summary>
+		/// <returns></returns>
+		protected RestRequest GetNewRequest(string requestString, Method method)
+		{
+			RestRequest rtn = new RestRequest(requestString, method);
+			return rtn;
+		}
 
 	{% for api in Model.Apis -%}
 		{% for operation in api.Operations -%}{% assign parameters = operation.Parameters | sort: 'required' -%}
@@ -40,7 +40,7 @@ namespace {{ Model.Namespace }}
 		public {{ operation.Returntype }} {{ operation.Nickname }}({% for param in parameters -%} {{ param.Type }} {{ param.Name }}{% if forloop.last -%}{% else -%}, {% endif -%} {% endfor -%})
 		{ 
 			string path = "{{ api.Path }}";
-			var request = GetNewRequest(path, Method.{{ operation.httpMethod }});
+			var request = GetNewRequest(path, Method.{{ operation.Method }});
 
 			var response = Client.Execute<{{ operation.Returntype }}>(request);
 
@@ -48,17 +48,17 @@ namespace {{ Model.Namespace }}
 				return response.Data;
 
 			switch((int)response.StatusCode)
-            {
+			{
 			{% for response in operation.errorResponses -%}
 
 				{{ response.code }}:
-				throw new ARIException(string.Format("{0}: {1}", {{ response.code }}, "{{ response.reason }}"));
+				throw new Exception(string.Format("{0}: {1}", {{ response.code }}, "{{ response.reason }}"));
 
 			{% endfor -%}
 				default:
 					// Unknown server response
-					throw new ARIException(string.Format("Unknown response code {0} from ARI.", response.StatusCode.ToString()));
-            }
+					throw new Exception(string.Format("Unknown response code {0}", response.StatusCode.ToString()));
+			}
 		}
 		{% endfor -%}
 	{% endfor -%}
