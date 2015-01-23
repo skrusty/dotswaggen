@@ -1,0 +1,26 @@
+﻿/*
+	Generated with DotSwagGen
+	Generated from  {{ Model.Resourceurl}}
+*/
+
+using System;
+using System.Collections.Generic;
+
+namespace {{ Model.Namespace }}
+{
+	/// <summary>
+	/// {{ Model.Description }}
+	/// </summary>
+	public class {{ Model.Name }} {% if Model.sub_type != null -%} : {{Model.sub_type}} {% endif -%}
+	
+	{
+	{% for property in Model.Properties -%}
+		
+		/// <summary>
+		/// {{ property.Description }}
+		/// </summary>
+		public property {{ property.Type }} {{ property.Name }} { get; set; }
+	{% endfor -%}
+	
+	}
+}
