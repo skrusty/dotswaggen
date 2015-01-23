@@ -1,13 +1,11 @@
 ﻿using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 namespace dotswaggen.Swagger
 {
     public class DataTypeRegistry
     {
-
-        public static Dictionary<string, string> SwaggerTypeMappings = new Dictionary<string, string>()
+        public static Dictionary<string, string> SwaggerTypeMappings = new Dictionary<string, string>
         {
             {"integer", "int"},
             {"long", "int"},
@@ -17,7 +15,7 @@ namespace dotswaggen.Swagger
             {"byte", "byte"},
             {"boolean", "bool"},
             {"date", "DateTime"},
-            {"dateTime", "DateTime"},
+            {"dateTime", "DateTime"}
         };
 
         public static string TypeLookup(string type)
@@ -33,6 +31,5 @@ namespace dotswaggen.Swagger
 
             return type;
         }
-
     }
 }

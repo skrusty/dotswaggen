@@ -31,6 +31,7 @@ namespace dotswaggen
         private static void ProcessFile(string inputFile)
         {
             // Load json file
+            var filename = Path.GetFileNameWithoutExtension(inputFile);
             string json;
             using (var webClient = new WebClient())
             {
@@ -42,10 +43,7 @@ namespace dotswaggen
                 var settings = new JsonSerializerSettings
                 {
                     MissingMemberHandling = MissingMemberHandling.Error,
-                    Error = (sender, args) =>
-                    {
-                        Console.WriteLine(args.ErrorContext.Error.Message);
-                    }
+                    Error = (sender, args) => { Console.WriteLine(args.ErrorContext.Error.Message); }
                 };
 
                 // do some nasty hacks here because Json.NET reserves '$' for internal stuff
@@ -113,7 +111,7 @@ namespace dotswaggen
                 {
                     Resourceurl = inputFile,
                     Namespace = _options.Namespace,
-                    Name = "OutputClass",
+                    Name = filename ?? "OutputClass",
                     Apis = swaggerResource.Apis.ToList()
                 };
 

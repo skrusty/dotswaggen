@@ -1,4 +1,9 @@
-﻿using System.Collections.Generic;
+﻿/*
+    This class was taken from the Swashbuckle Project
+    https://github.com/domaindrivendev/Swashbuckle
+ */
+
+using System.Collections.Generic;
 using DotLiquid;
 using Newtonsoft.Json;
 

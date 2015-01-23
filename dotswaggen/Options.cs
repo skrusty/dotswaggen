@@ -1,10 +1,9 @@
-﻿using System.Net.Cache;
-using CommandLine;
+﻿using CommandLine;
 using CommandLine.Text;
 
 namespace dotswaggen
 {
-    public class Options 
+    public class Options
     {
         [Option('s', "swagger", Required = true,
             HelpText = "Input files to be processed.")]
