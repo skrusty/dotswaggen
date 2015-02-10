@@ -59,7 +59,7 @@ namespace dotswaggen
                 // Load Model template with prefix is specified
                 var template =
                     Template.Parse(
-                        File.ReadAllText(string.Format("Templates\\{0}ModelTemplate.txt", _options.TemapltePrefix)));
+                        File.ReadAllText(string.Format("Templates\\{0}ModelTemplate.txt", _options.TemplatePrefix)));
 
                 foreach (var model in swaggerResource.Models)
                 {
@@ -106,7 +106,7 @@ namespace dotswaggen
 
                 template =
                     Template.Parse(
-                        File.ReadAllText(string.Format("Templates\\{0}ActionTemplate.txt", _options.TemapltePrefix)));
+                        File.ReadAllText(string.Format("Templates\\{0}ActionTemplate.txt", _options.TemplatePrefix)));
                 var tmpModel = new ApiOperations
                 {
                     Resourceurl = inputFile,

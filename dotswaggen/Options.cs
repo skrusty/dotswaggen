@@ -19,7 +19,7 @@ namespace dotswaggen
 
         [Option("t-prefix", Required = false,
             HelpText = "Prefix the template filename for each template type")]
-        public string TemapltePrefix { get; set; }
+        public string TemplatePrefix { get; set; }
 
         [Option("o-prefix", Required = false,
             HelpText = "Prefix the output filename for each file generated")]
