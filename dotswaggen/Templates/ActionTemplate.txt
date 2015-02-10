@@ -39,21 +39,29 @@ namespace {{ Model.Namespace }}
 		/// </summary>
 		public {{ operation.Returntype }} {{ operation.Nickname }}({% for param in parameters -%} {{ param.Type }} {{ param.Name }}{% if forloop.last -%}{% else -%}, {% endif -%} {% endfor -%})
 		{ 
-			string path = "{{ api.Path }}";
+			const string path = "{{ api.Path }}";
 			var request = GetNewRequest(path, Method.{{ operation.Method }});
-
+		{% for param in parameters %}
+			{% if param.param_type == "path" %}request.AddUrlSegment("{{ param.name }}", {{ param.name }}{% if param.Type != "string" %}.ToString(){% endif %});
+			{% elsif  param.param_type == "query" %}request.AddParameter("{{ param.name }}", {{ param.name }}{% if param.Type != "string" %}.ToString(){% endif %}, ParameterType.QueryString);
+			{% elsif  param.param_type == "body" %}request.AddBody({{ param.name }});{% endif %}
+		{% endfor -%}
+		{% if operation.Returntype == "void" %}
+			var response = Client.Execute(request);
+			if((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
+				return;
+		{% else %}
 			var response = Client.Execute<{{ operation.Returntype }}>(request);
-
 			if((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
 				return response.Data;
+		{% endif %}
+			
 
 			switch((int)response.StatusCode)
 			{
 			{% for response in operation.errorResponses -%}
-
 				{{ response.code }}:
 				throw new Exception(string.Format("{0}: {1}", {{ response.code }}, "{{ response.reason }}"));
-
 			{% endfor -%}
 				default:
 					// Unknown server response
