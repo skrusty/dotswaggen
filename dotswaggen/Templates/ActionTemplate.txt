@@ -37,14 +37,14 @@ namespace {{ Model.Namespace }}
 		/// <summary>
 		/// {{ operation.Summary }}
 		/// </summary>
-		public {{ operation.Returntype }} {{ operation.Nickname }}({% for param in parameters -%} {{ param.Type }} {{ param.Name }}{% if forloop.last -%}{% else -%}, {% endif -%} {% endfor -%})
+		public {{ operation.Returntype }} {{ operation.Nickname }}({% for param in parameters -%} {{ param.Templatetype }} {{ param.Name | varname }}{% if forloop.last -%}{% else -%}, {% endif -%} {% endfor -%})
 		{ 
 			const string path = "{{ api.Path }}";
 			var request = GetNewRequest(path, Method.{{ operation.Method }});
 		{% for param in parameters %}
-			{% if param.param_type == "path" %}request.AddUrlSegment("{{ param.name }}", {{ param.name }}{% if param.Type != "string" %}.ToString(){% endif %});
-			{% elsif  param.param_type == "query" %}request.AddParameter("{{ param.name }}", {{ param.name }}{% if param.Type != "string" %}.ToString(){% endif %}, ParameterType.QueryString);
-			{% elsif  param.param_type == "body" %}request.AddBody({{ param.name }});{% endif %}
+			{% if param.param_type == "path" %}request.AddUrlSegment("{{ param.name }}", {{ param.name | varname }}{% if param.Type != "string" %}.ToString(){% endif %});
+			{% elsif  param.param_type == "query" %}request.AddParameter("{{ param.name }}", {{ param.name | varname }}{% if param.Type != "string" %}.ToString(){% endif %}, ParameterType.QueryString);
+			{% elsif  param.param_type == "body" %}request.AddBody({{ param.name | varname }});{% endif %}
 		{% endfor -%}
 		{% if operation.Returntype == "void" %}
 			var response = Client.Execute(request);

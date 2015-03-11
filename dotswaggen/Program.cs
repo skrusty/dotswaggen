@@ -55,59 +55,31 @@ namespace dotswaggen
                 if (swaggerResource.Apis == null)
                     return;
 
-
-                // Load Model template with prefix is specified
-                var template =
-                    Template.Parse(
-                        File.ReadAllText(string.Format("Templates\\{0}ModelTemplate.txt", _options.TemplatePrefix)));
-
                 foreach (var model in swaggerResource.Models)
                 {
-                    var subType =
-                        swaggerResource.Models.SingleOrDefault(
-                            x => x.Value.SubTypes != null && x.Value.SubTypes.Contains(model.Key)).Key;
-                    var tempModel = new Model
+                    var datatypeModel = new Model
                     {
                         Name = model.Key,
                         Resourceurl = inputFile,
-                        sub_type = subType,
+                        sub_type = GetSubType(swaggerResource, model.Key),
                         Namespace = _options.Namespace,
                         Description = model.Value.Description,
                         Properties = new List<ModelProperty>()
                     };
-                    foreach (var prop in model.Value.Properties)
-                    {
-                        if (prop.Value != null)
-                        {
-                            var newProp = new ModelProperty
-                            {
-                                Description = prop.Value.Description,
-                                Name = prop.Key,
-                                Type = DataTypeRegistry.TypeLookup(prop.Value.Type ?? prop.Value.Ref)
-                            };
-                            tempModel.Properties.Add(newProp);
-                        }
-                    }
 
-                    var renderedCode = template.Render(Hash.FromAnonymousObject(new
+                    datatypeModel.Properties.AddRange(model.Value.Properties.Where(p => p.Value != null).Select(prop => new ModelProperty
                     {
-                        Model = tempModel
+                        Description = prop.Value.Description,
+                        Name = prop.Key,
+                        Type = prop.Value.Templatetype
                     }));
 
-                    // write code to output folder
-                    using (
-                        var outFile =
-                            File.CreateText(Path.Combine(_options.OutputFolder,
-                                string.Format("{0}{1}.{2}", _options.OutputPrefix, tempModel.Name, "cs"))))
-                    {
-                        outFile.Write(renderedCode);
-                    }
+                    var renderedCode = ApplyTemplate(GetTemplate("Model"), datatypeModel);
+
+                    WriteFile(renderedCode, datatypeModel.Name);
                 }
 
-                template =
-                    Template.Parse(
-                        File.ReadAllText(string.Format("Templates\\{0}ActionTemplate.txt", _options.TemplatePrefix)));
-                var tmpModel = new ApiOperations
+                var apiOperationModel = new ApiOperations
                 {
                     Resourceurl = inputFile,
                     Namespace = _options.Namespace,
@@ -115,27 +87,81 @@ namespace dotswaggen
                     Apis = swaggerResource.Apis.ToList()
                 };
 
-                var actionRenderedCode = template.Render(Hash.FromAnonymousObject(new
-                {
-                    Model = tmpModel
-                }));
+                var actionRenderedCode = ApplyTemplate(GetTemplate("Action"), apiOperationModel);
 
-                // write code to output folder
-                using (
-                    var outFile =
-                        File.CreateText(Path.Combine(_options.OutputFolder,
-                            string.Format("{0}{1}.{2}", _options.OutputPrefix, tmpModel.Name, "cs"))))
-                {
-                    outFile.Write(actionRenderedCode);
-                }
+                WriteFile(actionRenderedCode, apiOperationModel.Name);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
         }
+
+        private static void WriteFile(string renderedCode, string fileName)
+        {
+            using (
+                var outFile =
+                    File.CreateText(Path.Combine(_options.OutputFolder,
+                        string.Format("{0}{1}.{2}", _options.OutputPrefix, fileName, "cs"))))
+            {
+                outFile.Write(renderedCode);
+            }
+        }
+
+        private static string GetSubType(ApiDeclaration swaggerResource, string subTypeName)
+        {
+            var subType =
+                swaggerResource.Models.SingleOrDefault(
+                    x => x.Value.SubTypes != null && x.Value.SubTypes.Contains(subTypeName)).Key;
+            return subType;
+        }
+
+        private static Template GetTemplate(string name)
+        {
+            var template2 =
+                Template.Parse(
+                    File.ReadAllText(string.Format("Templates\\{0}{1}Template.txt", _options.TemplatePrefix, name)));
+            return template2;
+        }
+
+        private static string ApplyTemplate<TMODEL>(Template template, TMODEL model)
+        {
+            var renderedCode = template.Render(new RenderParameters()
+            {
+                Filters = new[] { typeof(TextFilters) },
+                LocalVariables = Hash.FromAnonymousObject(new
+                {
+                    Model = model
+                })
+            });
+            return renderedCode;
+        }
     }
 
+    public static class TextFilters
+    {
+        public static string Varname(Context context, string input)
+        {
+            return string.Concat(
+                "@",
+                System.Text.RegularExpressions.Regex.Replace(input, "[^a-zA-Z_0-9]", "_")
+            );
+        }
+    }
+
+    public class InspectedType : DotLiquid.Tag
+    {
+        public override void Initialize(string tagName, string markup, List<string> tokens)
+        {
+            base.Initialize(tagName, markup, tokens);
+            
+        }
+
+        public override void Render(Context context, TextWriter result)
+        {
+            base.Render(context, result);
+        }
+    }
 
     public class TemplateProperties : Drop
     {

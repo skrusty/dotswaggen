@@ -248,7 +248,39 @@ namespace dotswaggen.Swagger
         public bool? UniqueItems { get; set; }
     }
 
-    public class Parameter : Drop
+    public class TypedElement : Drop
+    {
+        [JsonProperty("type")]
+        public string Type { get; set; }
+
+        [JsonProperty("ref")]
+        public string Ref { get; set; }
+
+        [JsonProperty("items")]
+        public DataType Items { get; set; }
+    
+        [JsonIgnore]
+        public string Templatetype
+        {
+            get
+            {
+                var type = Type ?? Ref;
+                switch (type)
+                {
+                    case "array":
+                        return string.Format("List<{0}>", DataTypeRegistry.TypeLookup(Items.Templatetype));
+                    case "number":
+                        return "double";
+                    case "integer":
+                        return "int";
+                    default:
+                        return DataTypeRegistry.TypeLookup(type);
+                }
+            }
+        }
+    }
+
+    public class Parameter : TypedElement
     {
         [JsonProperty("paramType")]
         public string ParamType { get; set; }
@@ -275,12 +307,6 @@ namespace dotswaggen.Swagger
             }
         }
 
-        [JsonProperty("type")]
-        public string Type { get; set; }
-
-        [JsonProperty("ref")]
-        public string Ref { get; set; }
-
         [JsonProperty("format")]
         public string Format { get; set; }
 
@@ -296,9 +322,6 @@ namespace dotswaggen.Swagger
         [JsonProperty("maximum")]
         public string Maximum { get; set; }
 
-        [JsonProperty("items")]
-        public DataType Items { get; set; }
-
         [JsonProperty("uniqueItems")]
         public bool? UniqueItems { get; set; }
     }
@@ -312,19 +335,13 @@ namespace dotswaggen.Swagger
         public string Message { get; set; }
     }
 
-    public class DataType : Drop
+    public class DataType : TypedElement
     {
-        [JsonProperty("type")]
-        public string Type { get; set; }
-
         [JsonIgnore]
         public string DotType
         {
             get { return DataTypeRegistry.TypeLookup(Type); }
         }
-
-        [JsonProperty("ref")]
-        public string Ref { get; set; }
 
         [JsonProperty("format")]
         public string Format { get; set; }
@@ -337,9 +354,6 @@ namespace dotswaggen.Swagger
 
         [JsonProperty("maximum")]
         public string Maximum { get; set; }
-
-        [JsonProperty("items")]
-        public DataType Items { get; set; }
 
         [JsonProperty("uniqueItems")]
         public bool? UniqueItems { get; set; }
