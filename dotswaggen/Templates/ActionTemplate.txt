@@ -15,11 +15,20 @@ namespace {{ Model.Namespace }}
 	public class {{ Model.Name }}
 	{
 
-		protected RestClient Client;
+		protected IRestClient Client;
 
 		public {{ Model.Name }}(string uri, string username, string password){
 			this.Client = new RestClient(uri);
 			this.Client.Authenticator = new HttpBasicAuthenticator(username, password);
+		}
+
+		public {{ Model.Name }}(IRestClient client) {
+			this.Client = client;
+		}
+
+		public {{ Model.Name }}(string uri, IAuthenticator authenticator) {
+			this.Client = new RestClient(uri);
+			this.Client.Authenticator = authenticator;
 		}
 
 		/// <summary>
