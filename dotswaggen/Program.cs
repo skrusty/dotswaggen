@@ -7,6 +7,7 @@ using CommandLine;
 using dotswaggen.Swagger;
 using DotLiquid;
 using Newtonsoft.Json;
+using dotswaggen.CSharpModel;
 
 namespace dotswaggen
 {
@@ -40,65 +41,71 @@ namespace dotswaggen
 
             try
             {
-                var settings = new JsonSerializerSettings
+                var converter = LoadConverter(json);
+
+                //Set up enums required by the CSharp view of the world
+                Template.RegisterSafeType(typeof(CSharpModel.Operations.HttpMethod), o => o.ToString());
+                Template.RegisterSafeType(typeof(CSharpModel.Operations.ParameterType), o => o.ToString());
+
+                foreach (var m in converter.Models)
                 {
-                    MissingMemberHandling = MissingMemberHandling.Error,
-                    Error = (sender, args) => { Console.WriteLine(args.ErrorContext.Error.Message); }
-                };
-
-                // do some nasty hacks here because Json.NET reserves '$' for internal stuff
-                json = json.Replace("$ref", "ref");
-
-                // Parse Models
-                var swaggerResource = JsonConvert.DeserializeObject<ApiDeclaration>(json, settings);
-
-                if (swaggerResource.Apis == null)
-                    return;
-
-                foreach (var model in swaggerResource.Models)
-                {
-                    var datatypeModel = new Model
+                    var typeFileModel = new ClassFile()
                     {
-                        Name = model.Key,
                         Resourceurl = inputFile,
-                        sub_type = GetSubType(swaggerResource, model.Key),
                         Namespace = _options.Namespace,
-                        Description = model.Value.Description,
-                        Properties = new List<ModelProperty>()
+                        DataType = m
                     };
 
-                    datatypeModel.Properties.AddRange(model.Value.Properties.Where(p => p.Value != null).Select(prop => new ModelProperty
-                    {
-                        Description = prop.Value.Description,
-                        Name = prop.Key,
-                        Type = prop.Value.Templatetype
-                    }));
-
-                    var renderedCode = ApplyTemplate(GetTemplate("Model"), datatypeModel);
-
-                    WriteFile(renderedCode, datatypeModel.Name);
+                    WriteFile(ApplyTemplate(GetTemplate("Model"), typeFileModel), m.Name);
                 }
 
-                var apiOperationModel = new ApiOperations
+                var operationFileModel = new OperationsFile
                 {
                     Resourceurl = inputFile,
                     Namespace = _options.Namespace,
                     Name = filename ?? "OutputClass",
-                    Apis = swaggerResource.Apis.ToList()
+                    Apis = converter.Apis
                 };
 
-                var actionRenderedCode = ApplyTemplate(GetTemplate("Action"), apiOperationModel);
-
-                WriteFile(actionRenderedCode, apiOperationModel.Name);
+                WriteFile(ApplyTemplate(GetTemplate("Action"), operationFileModel), operationFileModel.Name);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex);
             }
+        }
+
+        private static SwaggerConverter LoadConverter(string json)
+        {
+            var swaggerResource = LoadSwagger(json);
+
+            if (swaggerResource.Apis == null)
+                throw new Exception("Could not load JSON as Swagger document");
+
+            var converter = new SwaggerConverter(swaggerResource);
+            return converter;
+        }
+
+        private static ApiDeclaration LoadSwagger(string json)
+        {
+            var settings = new JsonSerializerSettings
+            {
+                MissingMemberHandling = MissingMemberHandling.Error,
+                Error = (sender, args) => { Console.WriteLine(args.ErrorContext.Error.Message); }
+            };
+
+            // do some nasty hacks here because Json.NET reserves '$' for internal stuff
+            json = json.Replace("$ref", "ref");
+
+            // Parse Models
+            var swaggerResource = JsonConvert.DeserializeObject<ApiDeclaration>(json, settings);
+            return swaggerResource;
         }
 
         private static void WriteFile(string renderedCode, string fileName)
         {
+            Directory.CreateDirectory(_options.OutputFolder);
+
             using (
                 var outFile =
                     File.CreateText(Path.Combine(_options.OutputFolder,
@@ -126,40 +133,10 @@ namespace dotswaggen
 
         private static string ApplyTemplate<TMODEL>(Template template, TMODEL model)
         {
-            var renderedCode = template.Render(new RenderParameters()
-            {
-                Filters = new[] { typeof(TextFilters) },
-                LocalVariables = Hash.FromAnonymousObject(new
+            return template.Render(Hash.FromAnonymousObject(new
                 {
                     Model = model
-                })
-            });
-            return renderedCode;
-        }
-    }
-
-    public static class TextFilters
-    {
-        public static string Varname(Context context, string input)
-        {
-            return string.Concat(
-                "@",
-                System.Text.RegularExpressions.Regex.Replace(input, "[^a-zA-Z_0-9]", "_")
-            );
-        }
-    }
-
-    public class InspectedType : DotLiquid.Tag
-    {
-        public override void Initialize(string tagName, string markup, List<string> tokens)
-        {
-            base.Initialize(tagName, markup, tokens);
-            
-        }
-
-        public override void Render(Context context, TextWriter result)
-        {
-            base.Render(context, result);
+                }));
         }
     }
 
@@ -167,25 +144,16 @@ namespace dotswaggen
     {
         public string Resourceurl { get; set; }
         public string Namespace { get; set; }
+    }
+
+    public class OperationsFile : TemplateProperties
+    {
         public string Name { get; set; }
+        public CSharpModel.Operations.Api[] Apis { get; set; }
     }
 
-    public class ApiOperations : TemplateProperties
+    public class ClassFile : TemplateProperties
     {
-        public List<Api> Apis { get; set; }
-    }
-
-    public class Model : TemplateProperties
-    {
-        public string Description { get; set; }
-        public List<ModelProperty> Properties { get; set; }
-        public string sub_type { get; set; }
-    }
-
-    public class ModelProperty : Drop
-    {
-        public string Type { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
+        public CSharpModel.DataTypes.DataType DataType { get; set; }
     }
 }

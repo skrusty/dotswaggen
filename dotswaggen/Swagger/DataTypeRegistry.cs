@@ -1,35 +1,90 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace dotswaggen.Swagger
 {
     public class DataTypeRegistry
     {
-        public static Dictionary<string, string> SwaggerTypeMappings = new Dictionary<string, string>
+        public enum Types
         {
-            {"integer", "int"},
-            {"long", "int"},
-            {"float", "float"},
-            {"double", "double"},
-            {"string", "string"},
-            {"byte", "byte"},
-            {"boolean", "bool"},
-            {"date", "DateTime"},
-            {"dateTime", "DateTime"}
+            INTEGER,
+            NUMBER,
+            STRING,
+            BOOLEAN,
+        }
+
+        public enum Formats
+        {
+            INT32,
+            INT64,
+            FLOAT,
+            DOUBLE,
+            BYTE,
+            DATE,
+            DATETIME
+        }
+
+        public enum CommonNames
+        {
+            INTEGER,
+            LONG,
+            FLOAT,
+            DOUBLE,
+            STRING,
+            BYTE,
+            BOOLEAN,
+            DATE,
+            DATETIME
+        }
+
+        public static readonly List<Tuple<CommonNames, Tuple<Types, Formats?>>> PrimitiveTypes = new List<Tuple<CommonNames, Tuple<Types, Formats?>>>()
+        {
+            Tuple.Create( CommonNames.INTEGER, Pair( Types.INTEGER, Formats.INT32 ) ),
+            Tuple.Create( CommonNames.LONG, Pair( Types.INTEGER, Formats.INT64 ) ),
+            Tuple.Create( CommonNames.FLOAT, Pair( Types.NUMBER, Formats.FLOAT ) ),
+            Tuple.Create( CommonNames.DOUBLE, Pair( Types.NUMBER, Formats.DOUBLE ) ),
+            Tuple.Create( CommonNames.BYTE, Pair(Types.STRING, Formats.BYTE ) ),
+            Tuple.Create( CommonNames.DATE, Pair(Types.STRING, Formats.DATE ) ),
+            Tuple.Create( CommonNames.DATETIME, Pair(Types.STRING, Formats.DATETIME) ),
+            Tuple.Create( CommonNames.INTEGER, Pair(Types.INTEGER) ),
+            Tuple.Create( CommonNames.DOUBLE, Pair(Types.NUMBER) ),
+            Tuple.Create( CommonNames.STRING, Pair( Types.STRING ) ),
+            Tuple.Create( CommonNames.BOOLEAN, Pair(Types.BOOLEAN) )
         };
 
-        public static string TypeLookup(string type)
+        public static void WithPrimitiveType(string type, string format, Action<CommonNames> toDo)
         {
-            if (SwaggerTypeMappings.ContainsKey(type.ToLower()))
-                return SwaggerTypeMappings[type.ToLower()];
+            Types maybeType;
+            Formats? maybeFormat;
+            Formats formatHolder;
 
-            // check for complex type
-            var r = new Regex(@"List\[(.*)\]");
-            var match = r.Match(type);
-            if (match.Success)
-                return string.Format("List[{0}]", TypeLookup(match.Value));
+            if (!Enum.TryParse<Types>(type, true, out maybeType))
+                return; //Unrecognized type
 
-            return type;
+            if (format == null || !Enum.TryParse<Formats>(format, true, out formatHolder))
+            {
+                maybeFormat = null;
+            }
+            else
+            {
+                maybeFormat = formatHolder;
+            }
+
+            var foundTypes = PrimitiveTypes.Where(t => t.Item2.Item1 == maybeType && t.Item2.Item2 == maybeFormat).ToArray();
+            if (foundTypes.Length == 1)
+                toDo(foundTypes[0].Item1);
+        }
+
+        private static Tuple<Types, Formats?> Pair(Types t, Formats f)
+        {
+            return new Tuple<Types, Formats?>(t, f);
+        }
+
+        private static Tuple<Types, Formats?> Pair(Types t)
+        {
+            return new Tuple<Types, Formats?>(t, null);
         }
     }
 }
