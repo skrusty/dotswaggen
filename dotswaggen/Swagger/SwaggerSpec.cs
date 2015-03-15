@@ -4,7 +4,6 @@
  */
 
 using System.Collections.Generic;
-using DotLiquid;
 using Newtonsoft.Json;
 
 namespace dotswaggen.Swagger

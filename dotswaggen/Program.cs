@@ -1,13 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using CommandLine;
+using dotswaggen.CSharpModel;
+using dotswaggen.CSharpModel.Operations;
 using dotswaggen.Swagger;
 using DotLiquid;
 using Newtonsoft.Json;
-using dotswaggen.CSharpModel;
+using Api = dotswaggen.CSharpModel.Operations.Api;
+using DataType = dotswaggen.CSharpModel.DataTypes.DataType;
 
 namespace dotswaggen
 {
@@ -44,12 +46,12 @@ namespace dotswaggen
                 var converter = LoadConverter(json);
 
                 //Set up enums required by the CSharp view of the world
-                Template.RegisterSafeType(typeof(CSharpModel.Operations.HttpMethod), o => o.ToString());
-                Template.RegisterSafeType(typeof(CSharpModel.Operations.ParameterType), o => o.ToString());
+                Template.RegisterSafeType(typeof (HttpMethod), o => o.ToString());
+                Template.RegisterSafeType(typeof (ParameterType), o => o.ToString());
 
                 foreach (var m in converter.Models)
                 {
-                    var typeFileModel = new ClassFile()
+                    var typeFileModel = new ClassFile
                     {
                         Resourceurl = inputFile,
                         Namespace = _options.Namespace,
@@ -134,9 +136,9 @@ namespace dotswaggen
         private static string ApplyTemplate<TMODEL>(Template template, TMODEL model)
         {
             return template.Render(Hash.FromAnonymousObject(new
-                {
-                    Model = model
-                }));
+            {
+                Model = model
+            }));
         }
     }
 
@@ -149,11 +151,11 @@ namespace dotswaggen
     public class OperationsFile : TemplateProperties
     {
         public string Name { get; set; }
-        public CSharpModel.Operations.Api[] Apis { get; set; }
+        public Api[] Apis { get; set; }
     }
 
     public class ClassFile : TemplateProperties
     {
-        public CSharpModel.DataTypes.DataType DataType { get; set; }
+        public DataType DataType { get; set; }
     }
 }

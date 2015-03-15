@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using dotswaggen.CSharpModel.DataTypes;
+﻿using System.Collections.Generic;
+using DotLiquid;
 
 namespace dotswaggen.CSharpModel.Operations
 {
-    public class Operation : DotLiquid.Drop
+    public class Operation : Drop
     {
         public IEnumerable<Parameter> Parameters { get; set; }
         public string Description { get; set; }

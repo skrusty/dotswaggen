@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using DotLiquid;
 
 namespace dotswaggen.CSharpModel.Operations
 {
-    public class Api : DotLiquid.Drop
+    public class Api : Drop
     {
         public string Description { get; set; }
         public string Path { get; set; }

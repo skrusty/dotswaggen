@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DotLiquid;
 
 namespace dotswaggen.CSharpModel.DataTypes
 {
-    public class DataProperty : DotLiquid.Drop
+    public class DataProperty : Drop
     {
         public string Description { get; set; }
         public string Type { get; set; }

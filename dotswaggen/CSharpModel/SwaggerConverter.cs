@@ -1,24 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using dotswaggen;
+using System.Text.RegularExpressions;
 using dotswaggen.CSharpModel.DataTypes;
 using dotswaggen.CSharpModel.Operations;
-using System.Text.RegularExpressions;
+using dotswaggen.Swagger;
+using Api = dotswaggen.CSharpModel.Operations.Api;
+using DataType = dotswaggen.CSharpModel.DataTypes.DataType;
+using Operation = dotswaggen.CSharpModel.Operations.Operation;
+using Parameter = dotswaggen.CSharpModel.Operations.Parameter;
 using SwaggerTypes = dotswaggen.Swagger.DataTypeRegistry;
 
 namespace dotswaggen.CSharpModel
 {
     public class SwaggerConverter
     {
-        public SwaggerConverter(Swagger.ApiDeclaration root)
+        public static Dictionary<DataTypeRegistry.CommonNames, string> SwaggerTypeMappings = new Dictionary
+            <DataTypeRegistry.CommonNames, string>
+        {
+            {DataTypeRegistry.CommonNames.INTEGER, "int"},
+            {DataTypeRegistry.CommonNames.LONG, "long"},
+            {DataTypeRegistry.CommonNames.FLOAT, "float"},
+            {DataTypeRegistry.CommonNames.DOUBLE, "double"},
+            {DataTypeRegistry.CommonNames.STRING, "string"},
+            {DataTypeRegistry.CommonNames.BYTE, "byte"},
+            {DataTypeRegistry.CommonNames.BOOLEAN, "bool"},
+            {DataTypeRegistry.CommonNames.DATE, "DateTime"},
+            {DataTypeRegistry.CommonNames.DATETIME, "DateTime"}
+        };
+
+        public SwaggerConverter(ApiDeclaration root)
         {
             Root = root;
         }
 
-        private Swagger.ApiDeclaration Root { get; set; }
+        private ApiDeclaration Root { get; set; }
 
         public Api[] Apis
         {
@@ -28,7 +44,7 @@ namespace dotswaggen.CSharpModel
 
                 foreach (var swApi in Root.Apis)
                 {
-                    var api = new Api()
+                    var api = new Api
                     {
                         Description = swApi.Description,
                         Path = swApi.Path
@@ -36,9 +52,9 @@ namespace dotswaggen.CSharpModel
 
                     api.Operations = swApi.Operations.Select(swOp =>
                     {
-                        var op = new Operation()
+                        var op = new Operation
                         {
-                            Method = (HttpMethod)Enum.Parse(typeof(HttpMethod), swOp.Method, true),
+                            Method = (HttpMethod) Enum.Parse(typeof (HttpMethod), swOp.Method, true),
                             Nickname = swOp.Nickname,
                             ReturnType = GetTypeString(swOp),
                             Description = swOp.Summary
@@ -46,9 +62,9 @@ namespace dotswaggen.CSharpModel
 
                         op.Parameters = swOp.Parameters.Select(swP =>
                         {
-                            return new Parameter()
+                            return new Parameter
                             {
-                                Location = (ParameterType)Enum.Parse(typeof(ParameterType), swP.ParamType, true),
+                                Location = (ParameterType) Enum.Parse(typeof (ParameterType), swP.ParamType, true),
                                 Name = GetValidIdentifier(swP.Name),
                                 Type = GetTypeString(swP)
                             };
@@ -56,7 +72,7 @@ namespace dotswaggen.CSharpModel
 
                         op.Responses = swOp.ResponseMessages.Select(swResp =>
                         {
-                            return new Response()
+                            return new Response
                             {
                                 Code = swResp.Code,
                                 Message = swResp.Message
@@ -96,8 +112,13 @@ namespace dotswaggen.CSharpModel
                     model.Description = m.Value.Description;
                     model.Name = GetValidIdentifier(m.Key);
                     model.Properties = m.Value.Properties.Select(p =>
-                        new DataProperty() { Description = p.Value.Description, Name = GetValidIdentifier(p.Key), Type = GetTypeString(p.Value) }
-                    ).ToArray();
+                        new DataProperty
+                        {
+                            Description = p.Value.Description,
+                            Name = GetValidIdentifier(p.Key),
+                            Type = GetTypeString(p.Value)
+                        }
+                        ).ToArray();
 
                     if (m.Value.SubTypes != null)
                         foreach (var subType in m.Value.SubTypes)
@@ -110,37 +131,13 @@ namespace dotswaggen.CSharpModel
             }
         }
 
-        public static string GetTypeString(Swagger.TypedElement te)
-        {
-            var type = te.Type ?? te.Ref;
-            switch (type)
-            {
-                case "array":
-                    return string.Format("List<{0}>", GetTypeString(te.Items));
-                default:
-                    {
-                        SwaggerTypes.WithPrimitiveType(type, te.Format, tcn => type = SwaggerTypeMappings[tcn]);
-                        return type;
-                    }
-            }
-        }
-
-        public static string GetValidIdentifier(string maybeValidIdentifier)
-        {
-            maybeValidIdentifier = Regex.Replace(maybeValidIdentifier, "[^a-zA-Z_0-9]", "_");
-
-            if (!Regex.IsMatch(maybeValidIdentifier, @"^[_a-zA-Z@]") || ReservedIdentifiers.Contains(maybeValidIdentifier))
-                maybeValidIdentifier = string.Concat("@", maybeValidIdentifier);
-
-            return maybeValidIdentifier;
-        }
-
         public static HashSet<string> ReservedIdentifiers
         {
             get
             {
                 return new HashSet<string>(
-                    new string[]{
+                    new[]
+                    {
                         "abstract",
                         "as",
                         "base",
@@ -221,21 +218,34 @@ namespace dotswaggen.CSharpModel
                         "volatile",
                         "while"
                     }
-                );
+                    );
             }
         }
 
-        public static Dictionary<SwaggerTypes.CommonNames, string> SwaggerTypeMappings = new Dictionary<SwaggerTypes.CommonNames, string>
+        public static string GetTypeString(TypedElement te)
         {
-            {SwaggerTypes.CommonNames.INTEGER, "int"},
-            {SwaggerTypes.CommonNames.LONG, "long"},
-            {SwaggerTypes.CommonNames.FLOAT, "float"},
-            {SwaggerTypes.CommonNames.DOUBLE, "double"},
-            {SwaggerTypes.CommonNames.STRING, "string"},
-            {SwaggerTypes.CommonNames.BYTE, "byte"},
-            {SwaggerTypes.CommonNames.BOOLEAN, "bool"},
-            {SwaggerTypes.CommonNames.DATE, "DateTime"},
-            {SwaggerTypes.CommonNames.DATETIME, "DateTime"},
-        };
+            var type = te.Type ?? te.Ref;
+            switch (type)
+            {
+                case "array":
+                    return string.Format("List<{0}>", GetTypeString(te.Items));
+                default:
+                {
+                    SwaggerTypes.WithPrimitiveType(type, te.Format, tcn => type = SwaggerTypeMappings[tcn]);
+                    return type;
+                }
+            }
+        }
+
+        public static string GetValidIdentifier(string maybeValidIdentifier)
+        {
+            maybeValidIdentifier = Regex.Replace(maybeValidIdentifier, "[^a-zA-Z_0-9]", "_");
+
+            if (!Regex.IsMatch(maybeValidIdentifier, @"^[_a-zA-Z@]") ||
+                ReservedIdentifiers.Contains(maybeValidIdentifier))
+                maybeValidIdentifier = string.Concat("@", maybeValidIdentifier);
+
+            return maybeValidIdentifier;
+        }
     }
 }
