@@ -7,6 +7,7 @@ using CommandLine;
 using dotswaggen.Swagger;
 using DotLiquid;
 using Newtonsoft.Json;
+using dotswaggen.CSharpModel;
 
 namespace dotswaggen
 {
@@ -40,126 +41,119 @@ namespace dotswaggen
 
             try
             {
-                var settings = new JsonSerializerSettings
+                var converter = LoadConverter(json);
+
+                //Set up enums required by the CSharp view of the world
+                Template.RegisterSafeType(typeof(CSharpModel.Operations.HttpMethod), o => o.ToString());
+                Template.RegisterSafeType(typeof(CSharpModel.Operations.ParameterType), o => o.ToString());
+
+                foreach (var m in converter.Models)
                 {
-                    MissingMemberHandling = MissingMemberHandling.Error,
-                    Error = (sender, args) => { Console.WriteLine(args.ErrorContext.Error.Message); }
-                };
-
-                // do some nasty hacks here because Json.NET reserves '$' for internal stuff
-                json = json.Replace("$ref", "ref");
-
-                // Parse Models
-                var swaggerResource = JsonConvert.DeserializeObject<ApiDeclaration>(json, settings);
-
-                if (swaggerResource.Apis == null)
-                    return;
-
-
-                // Load Model template with prefix is specified
-                var template =
-                    Template.Parse(
-                        File.ReadAllText(string.Format("Templates\\{0}ModelTemplate.txt", _options.TemplatePrefix)));
-
-                foreach (var model in swaggerResource.Models)
-                {
-                    var subType =
-                        swaggerResource.Models.SingleOrDefault(
-                            x => x.Value.SubTypes != null && x.Value.SubTypes.Contains(model.Key)).Key;
-                    var tempModel = new Model
+                    var typeFileModel = new ClassFile()
                     {
-                        Name = model.Key,
                         Resourceurl = inputFile,
-                        sub_type = subType,
                         Namespace = _options.Namespace,
-                        Description = model.Value.Description,
-                        Properties = new List<ModelProperty>()
+                        DataType = m
                     };
-                    foreach (var prop in model.Value.Properties)
-                    {
-                        if (prop.Value != null)
-                        {
-                            var newProp = new ModelProperty
-                            {
-                                Description = prop.Value.Description,
-                                Name = prop.Key,
-                                Type = DataTypeRegistry.TypeLookup(prop.Value.Type ?? prop.Value.Ref)
-                            };
-                            tempModel.Properties.Add(newProp);
-                        }
-                    }
 
-                    var renderedCode = template.Render(Hash.FromAnonymousObject(new
-                    {
-                        Model = tempModel
-                    }));
-
-                    // write code to output folder
-                    using (
-                        var outFile =
-                            File.CreateText(Path.Combine(_options.OutputFolder,
-                                string.Format("{0}{1}.{2}", _options.OutputPrefix, tempModel.Name, "cs"))))
-                    {
-                        outFile.Write(renderedCode);
-                    }
+                    WriteFile(ApplyTemplate(GetTemplate("Model"), typeFileModel), m.Name);
                 }
 
-                template =
-                    Template.Parse(
-                        File.ReadAllText(string.Format("Templates\\{0}ActionTemplate.txt", _options.TemplatePrefix)));
-                var tmpModel = new ApiOperations
+                var operationFileModel = new OperationsFile
                 {
                     Resourceurl = inputFile,
                     Namespace = _options.Namespace,
                     Name = filename ?? "OutputClass",
-                    Apis = swaggerResource.Apis.ToList()
+                    Apis = converter.Apis
                 };
 
-                var actionRenderedCode = template.Render(Hash.FromAnonymousObject(new
-                {
-                    Model = tmpModel
-                }));
-
-                // write code to output folder
-                using (
-                    var outFile =
-                        File.CreateText(Path.Combine(_options.OutputFolder,
-                            string.Format("{0}{1}.{2}", _options.OutputPrefix, tmpModel.Name, "cs"))))
-                {
-                    outFile.Write(actionRenderedCode);
-                }
+                WriteFile(ApplyTemplate(GetTemplate("Action"), operationFileModel), operationFileModel.Name);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex);
             }
         }
-    }
 
+        private static SwaggerConverter LoadConverter(string json)
+        {
+            var swaggerResource = LoadSwagger(json);
+
+            if (swaggerResource.Apis == null)
+                throw new Exception("Could not load JSON as Swagger document");
+
+            var converter = new SwaggerConverter(swaggerResource);
+            return converter;
+        }
+
+        private static ApiDeclaration LoadSwagger(string json)
+        {
+            var settings = new JsonSerializerSettings
+            {
+                MissingMemberHandling = MissingMemberHandling.Error,
+                Error = (sender, args) => { Console.WriteLine(args.ErrorContext.Error.Message); }
+            };
+
+            // do some nasty hacks here because Json.NET reserves '$' for internal stuff
+            json = json.Replace("$ref", "ref");
+
+            // Parse Models
+            var swaggerResource = JsonConvert.DeserializeObject<ApiDeclaration>(json, settings);
+            return swaggerResource;
+        }
+
+        private static void WriteFile(string renderedCode, string fileName)
+        {
+            Directory.CreateDirectory(_options.OutputFolder);
+
+            using (
+                var outFile =
+                    File.CreateText(Path.Combine(_options.OutputFolder,
+                        string.Format("{0}{1}.{2}", _options.OutputPrefix, fileName, "cs"))))
+            {
+                outFile.Write(renderedCode);
+            }
+        }
+
+        private static string GetSubType(ApiDeclaration swaggerResource, string subTypeName)
+        {
+            var subType =
+                swaggerResource.Models.SingleOrDefault(
+                    x => x.Value.SubTypes != null && x.Value.SubTypes.Contains(subTypeName)).Key;
+            return subType;
+        }
+
+        private static Template GetTemplate(string name)
+        {
+            var template2 =
+                Template.Parse(
+                    File.ReadAllText(string.Format("Templates\\{0}{1}Template.txt", _options.TemplatePrefix, name)));
+            return template2;
+        }
+
+        private static string ApplyTemplate<TMODEL>(Template template, TMODEL model)
+        {
+            return template.Render(Hash.FromAnonymousObject(new
+                {
+                    Model = model
+                }));
+        }
+    }
 
     public class TemplateProperties : Drop
     {
         public string Resourceurl { get; set; }
         public string Namespace { get; set; }
+    }
+
+    public class OperationsFile : TemplateProperties
+    {
         public string Name { get; set; }
+        public CSharpModel.Operations.Api[] Apis { get; set; }
     }
 
-    public class ApiOperations : TemplateProperties
+    public class ClassFile : TemplateProperties
     {
-        public List<Api> Apis { get; set; }
-    }
-
-    public class Model : TemplateProperties
-    {
-        public string Description { get; set; }
-        public List<ModelProperty> Properties { get; set; }
-        public string sub_type { get; set; }
-    }
-
-    public class ModelProperty : Drop
-    {
-        public string Type { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
+        public CSharpModel.DataTypes.DataType DataType { get; set; }
     }
 }

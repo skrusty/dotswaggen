@@ -1,6 +1,6 @@
 ﻿/*
 	Generated with DotSwagGen
-	Generated from  {{ Model.Resourceurl}}
+	Generated from  {{ Model.Resourceurl }}
 */
 
 using System;
@@ -15,60 +15,75 @@ namespace {{ Model.Namespace }}
 	public class {{ Model.Name }}
 	{
 
-		protected RestClient Client;
+		private IRestClient Client;
 
 		public {{ Model.Name }}(string uri, string username, string password){
-			this.Client = new RestClient(uri);
-			this.Client.Authenticator = new HttpBasicAuthenticator(username, password);
+			Client = new RestClient(uri);
+			Client.Authenticator = new HttpBasicAuthenticator(username, password);
+		}
+
+		public {{ Model.Name }}(IRestClient client) {
+			Client = client;
+		}
+
+		public {{ Model.Name }}(string uri, IAuthenticator authenticator) {
+			Client = new RestClient(uri);
+			Client.Authenticator = authenticator;
 		}
 
 		/// <summary>
 		/// 
 		/// </summary>
 		/// <returns></returns>
-		protected RestRequest GetNewRequest(string requestString, Method method)
+		private static RestRequest GetNewRequest(string requestString, Method method)
 		{
-			RestRequest rtn = new RestRequest(requestString, method);
-			return rtn;
+			return new RestRequest(requestString, method);
 		}
 
 	{% for api in Model.Apis -%}
-		{% for operation in api.Operations -%}{% assign parameters = operation.Parameters | sort: 'required' -%}
-		/// <summary>
-		/// {{ operation.Summary }}
-		/// </summary>
-		public {{ operation.Returntype }} {{ operation.Nickname }}({% for param in parameters -%} {{ param.Type }} {{ param.Name }}{% if forloop.last -%}{% else -%}, {% endif -%} {% endfor -%})
-		{ 
-			const string path = "{{ api.Path }}";
-			var request = GetNewRequest(path, Method.{{ operation.Method }});
-		{% for param in parameters %}
-			{% if param.param_type == "path" %}request.AddUrlSegment("{{ param.name }}", {{ param.name }}{% if param.Type != "string" %}.ToString(){% endif %});
-			{% elsif  param.param_type == "query" %}request.AddParameter("{{ param.name }}", {{ param.name }}{% if param.Type != "string" %}.ToString(){% endif %}, ParameterType.QueryString);
-			{% elsif  param.param_type == "body" %}request.AddBody({{ param.name }});{% endif %}
-		{% endfor -%}
-		{% if operation.Returntype == "void" %}
-			var response = Client.Execute(request);
-			if((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
-				return;
-		{% else %}
-			var response = Client.Execute<{{ operation.Returntype }}>(request);
-			if((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
-				return response.Data;
-		{% endif %}
-			
 
-			switch((int)response.StatusCode)
-			{
-			{% for response in operation.errorResponses -%}
-				{{ response.code }}:
-				throw new Exception(string.Format("{0}: {1}", {{ response.code }}, "{{ response.reason }}"));
+		/// <summary>
+		/// {{ api.Description }}
+		/// </summary>
+		#region {{ api.Path }}
+			{% for operation in api.Operations -%}{% assign parameters = operation.Parameters | sort: 'required' -%}
+
+			/// <summary>
+			/// {{ operation.Description }}
+			/// </summary>
+			public {{ operation.Return_type }} {{ operation.Nickname }}({% for param in parameters -%} {{ param.Type }} {{ param.Name }}{% if forloop.last -%}{% else -%}, {% endif -%} {% endfor -%})
+			{ 
+				const string path = "{{ api.Path }}";
+				var request = GetNewRequest(path, Method.{{ operation.Method }});
+			{% for param in parameters %}
+				{% if param.Location == "Path" %}request.AddUrlSegment("{{ param.Name }}", {{ param.Name }}{% if param.Type != "string" %}.ToString(){% endif %});
+				{% elsif  param.Location == "Query" %}request.AddParameter("{{ param.Name }}", {{ param.Name }}{% if param.Type != "string" %}.ToString(){% endif %}, ParameterType.QueryString);
+				{% elsif  param.Location == "Body" %}request.AddBody({{ param.Name }});{% endif %}
 			{% endfor -%}
-				default:
-					// Unknown server response
-					throw new Exception(string.Format("Unknown response code {0}", response.StatusCode.ToString()));
+			{% if operation.Return_type == "void" %}
+				var response = Client.Execute(request);
+				if((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
+					return;
+			{% else %}
+				var response = Client.Execute<{{ operation.Return_type }}>(request);
+				if((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
+					return response.Data;
+			{% endif %}
+				
+	
+				switch((int)response.StatusCode)
+				{
+				{% for response in operation.Responses -%}
+					case {{ response.Code }}:
+					throw new Exception(string.Format("{0}: {1}", {{ response.Code }}, "{{ response.Message }}"));
+				{% endfor -%}
+					default:
+						// Unknown server response
+						throw new Exception(string.Format("Unknown response code {0}", response.StatusCode.ToString()));
+				}
 			}
-		}
-		{% endfor -%}
+			{% endfor -%}
+		#endregion
 	{% endfor -%}
 	}
 }

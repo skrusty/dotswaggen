@@ -1,6 +1,6 @@
 ﻿/*
 	Generated with DotSwagGen
-	Generated from  {{ Model.Resourceurl}}
+	Generated from  {{ Model.Resourceurl }}
 */
 
 using System;
@@ -9,13 +9,13 @@ using System.Collections.Generic;
 namespace {{ Model.Namespace }}
 {
 	/// <summary>
-	/// {{ Model.Description }}
+	/// {{ Model.Data_type.Description }}
 	/// </summary>
-	public class {{ Model.Name }} {% if Model.sub_type != null -%} : {{Model.sub_type}} {% endif -%}
-	
+	public class {{ Model.Data_type.Name }} {% if Model.Data_type.Parent_type != null -%} : {{Model.Data_type.Parent_type}} {% endif -%}
+
 	{
-	{% for property in Model.Properties -%}
-		
+	{% for property in Model.Data_type.Properties -%}
+
 		/// <summary>
 		/// {{ property.Description }}
 		/// </summary>

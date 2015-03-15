@@ -50,6 +50,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CSharpModel\DataTypes\DataProperty.cs" />
+    <Compile Include="CSharpModel\DataTypes\DataType.cs" />
+    <Compile Include="CSharpModel\Operations\Api.cs" />
+    <Compile Include="CSharpModel\Operations\HttpMethod.cs" />
+    <Compile Include="CSharpModel\Operations\Operation.cs" />
+    <Compile Include="CSharpModel\Operations\Parameter.cs" />
+    <Compile Include="CSharpModel\Operations\ParameterType.cs" />
+    <Compile Include="CSharpModel\Operations\Response.cs" />
+    <Compile Include="CSharpModel\SwaggerConverter.cs" />
     <Compile Include="Options.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -68,6 +77,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

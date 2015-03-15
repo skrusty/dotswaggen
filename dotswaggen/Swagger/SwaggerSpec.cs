@@ -168,7 +168,7 @@ namespace dotswaggen.Swagger
         public Dictionary<string, IList<Scope>> Authorizations { get; set; }
     }
 
-    public class Api : Drop
+    public class Api
     {
         [JsonProperty("path")]
         public string Path { get; set; }
@@ -180,7 +180,7 @@ namespace dotswaggen.Swagger
         public IList<Operation> Operations { get; set; }
     }
 
-    public class Operation : Drop
+    public class Operation : TypedElement
     {
         [JsonProperty("method")]
         public string Method { get; set; }
@@ -208,29 +208,21 @@ namespace dotswaggen.Swagger
 
         [JsonProperty("consumes")]
         public IList<string> Consumes { get; set; }
+    }
 
-        [JsonIgnore]
-        public string Returntype
-        {
-            get
-            {
-                if (Type == "array")
-                    return string.Format("List<{0}>", DataTypeRegistry.TypeLookup(Items.Ref));
-                return DataTypeRegistry.TypeLookup(Type);
-            }
-        }
-
+    public class TypedElement
+    {
         [JsonProperty("type")]
         public string Type { get; set; }
 
-        [JsonProperty("$ref")]
+        [JsonProperty("ref")]
         public string Ref { get; set; }
+
+        [JsonProperty("items")]
+        public DataType Items { get; set; }
 
         [JsonProperty("format")]
         public string Format { get; set; }
-
-        [JsonProperty("defaultValue")]
-        public string DefaultValue { get; set; }
 
         [JsonProperty("enum")]
         public IList<string> Enum { get; set; }
@@ -241,14 +233,14 @@ namespace dotswaggen.Swagger
         [JsonProperty("maximum")]
         public string Maximum { get; set; }
 
-        [JsonProperty("items")]
-        public DataType Items { get; set; }
+        [JsonProperty("defaultValue")]
+        public string DefaultValue { get; set; }
 
         [JsonProperty("uniqueItems")]
         public bool? UniqueItems { get; set; }
     }
 
-    public class Parameter : Drop
+    public class Parameter : TypedElement
     {
         [JsonProperty("paramType")]
         public string ParamType { get; set; }
@@ -264,46 +256,9 @@ namespace dotswaggen.Swagger
 
         [JsonProperty("allowMultiple")]
         public bool? AllowMultiple { get; set; }
-
-        public string ReturnType
-        {
-            get
-            {
-                if (Type == "array")
-                    return string.Format("List<{0}>", DataTypeRegistry.TypeLookup(Ref));
-                return DataTypeRegistry.TypeLookup(Ref);
-            }
-        }
-
-        [JsonProperty("type")]
-        public string Type { get; set; }
-
-        [JsonProperty("ref")]
-        public string Ref { get; set; }
-
-        [JsonProperty("format")]
-        public string Format { get; set; }
-
-        [JsonProperty("defaultValue")]
-        public string DefaultValue { get; set; }
-
-        [JsonProperty("enum")]
-        public IList<string> Enum { get; set; }
-
-        [JsonProperty("minimum")]
-        public string Minimum { get; set; }
-
-        [JsonProperty("maximum")]
-        public string Maximum { get; set; }
-
-        [JsonProperty("items")]
-        public DataType Items { get; set; }
-
-        [JsonProperty("uniqueItems")]
-        public bool? UniqueItems { get; set; }
     }
 
-    public class ResponseMessage : Drop
+    public class ResponseMessage
     {
         [JsonProperty("code")]
         public int Code { get; set; }
@@ -312,38 +267,14 @@ namespace dotswaggen.Swagger
         public string Message { get; set; }
     }
 
-    public class DataType : Drop
+    public class Property : TypedElement
     {
-        [JsonProperty("type")]
-        public string Type { get; set; }
+        [JsonProperty("description")]
+        public string Description { get; set; }
+    }
 
-        [JsonIgnore]
-        public string DotType
-        {
-            get { return DataTypeRegistry.TypeLookup(Type); }
-        }
-
-        [JsonProperty("ref")]
-        public string Ref { get; set; }
-
-        [JsonProperty("format")]
-        public string Format { get; set; }
-
-        [JsonProperty("enum")]
-        public IList<string> Enum { get; set; }
-
-        [JsonProperty("minimum")]
-        public string Minimum { get; set; }
-
-        [JsonProperty("maximum")]
-        public string Maximum { get; set; }
-
-        [JsonProperty("items")]
-        public DataType Items { get; set; }
-
-        [JsonProperty("uniqueItems")]
-        public bool? UniqueItems { get; set; }
-
+    public class DataType : TypedElement
+    {
         /*
         NOTE: The properties below should be in a separate "Model" class. Unfortunately,
         it was modelled incorrectly and can't be fixed until the next major version of
@@ -360,7 +291,7 @@ namespace dotswaggen.Swagger
         public string[] Required { get; set; }
 
         [JsonProperty("properties")]
-        public IDictionary<string, DataType> Properties { get; set; }
+        public IDictionary<string, Property> Properties { get; set; }
 
         [JsonProperty("subTypes")]
         public IList<string> SubTypes { get; set; }
