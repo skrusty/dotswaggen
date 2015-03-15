@@ -5,11 +5,10 @@ using System.Net;
 using CommandLine;
 using dotswaggen.CSharpModel;
 using dotswaggen.CSharpModel.Operations;
+using dotswaggen.Interfaces;
 using dotswaggen.Swagger;
 using DotLiquid;
 using Newtonsoft.Json;
-using Api = dotswaggen.CSharpModel.Operations.Api;
-using DataType = dotswaggen.CSharpModel.DataTypes.DataType;
 
 namespace dotswaggen
 {
@@ -45,9 +44,7 @@ namespace dotswaggen
             {
                 var converter = LoadConverter(json);
 
-                //Set up enums required by the CSharp view of the world
-                Template.RegisterSafeType(typeof (HttpMethod), o => o.ToString());
-                Template.RegisterSafeType(typeof (ParameterType), o => o.ToString());
+                converter.RegisterSafeTypes();
 
                 foreach (var m in converter.Models)
                 {
@@ -77,7 +74,7 @@ namespace dotswaggen
             }
         }
 
-        private static SwaggerConverter LoadConverter(string json)
+        private static ISwaggerConverter LoadConverter(string json)
         {
             var swaggerResource = LoadSwagger(json);
 
@@ -151,11 +148,11 @@ namespace dotswaggen
     public class OperationsFile : TemplateProperties
     {
         public string Name { get; set; }
-        public Api[] Apis { get; set; }
+        public IApi[] Apis { get; set; }
     }
 
     public class ClassFile : TemplateProperties
     {
-        public DataType DataType { get; set; }
+        public IDataType DataType { get; set; }
     }
 }

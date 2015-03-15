@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using dotswaggen.CSharpModel.DataTypes;
 using dotswaggen.CSharpModel.Operations;
+using dotswaggen.Interfaces;
 using dotswaggen.Swagger;
+using DotLiquid;
 using Api = dotswaggen.CSharpModel.Operations.Api;
 using DataType = dotswaggen.CSharpModel.DataTypes.DataType;
 using Operation = dotswaggen.CSharpModel.Operations.Operation;
@@ -13,7 +15,7 @@ using SwaggerTypes = dotswaggen.Swagger.DataTypeRegistry;
 
 namespace dotswaggen.CSharpModel
 {
-    public class SwaggerConverter
+    public class SwaggerConverter : ISwaggerConverter
     {
         public static Dictionary<DataTypeRegistry.CommonNames, string> SwaggerTypeMappings = new Dictionary
             <DataTypeRegistry.CommonNames, string>
@@ -36,7 +38,7 @@ namespace dotswaggen.CSharpModel
 
         private ApiDeclaration Root { get; set; }
 
-        public Api[] Apis
+        public IApi[] Apis
         {
             get
             {
@@ -89,7 +91,7 @@ namespace dotswaggen.CSharpModel
             }
         }
 
-        public DataType[] Models
+        public IDataType[] Models
         {
             get
             {
@@ -246,6 +248,13 @@ namespace dotswaggen.CSharpModel
                 maybeValidIdentifier = string.Concat("@", maybeValidIdentifier);
 
             return maybeValidIdentifier;
+        }
+
+        public void RegisterSafeTypes()
+        {
+            //Set up enums required by the CSharp view of the world
+            Template.RegisterSafeType(typeof(HttpMethod), o => o.ToString());
+            Template.RegisterSafeType(typeof(ParameterType), o => o.ToString());
         }
     }
 }

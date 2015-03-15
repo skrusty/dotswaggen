@@ -52,6 +52,9 @@
   <ItemGroup>
     <Compile Include="CSharpModel\DataTypes\DataProperty.cs" />
     <Compile Include="CSharpModel\DataTypes\DataType.cs" />
+    <Compile Include="Interfaces\IApi.cs" />
+    <Compile Include="Interfaces\IDataType.cs" />
+    <Compile Include="Interfaces\ISwaggerConverter.cs" />
     <Compile Include="CSharpModel\Operations\Api.cs" />
     <Compile Include="CSharpModel\Operations\HttpMethod.cs" />
     <Compile Include="CSharpModel\Operations\Operation.cs" />
