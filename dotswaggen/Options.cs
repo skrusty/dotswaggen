@@ -1,4 +1,5 @@
-﻿using CommandLine;
+﻿using System.Reflection;
+using CommandLine;
 using CommandLine.Text;
 
 namespace dotswaggen
@@ -34,7 +35,7 @@ namespace dotswaggen
         {
             var help = new HelpText
             {
-                Heading = new HeadingInfo("DotSwagGen", "0.0.1"),
+                Heading = new HeadingInfo("DotSwagGen", Assembly.GetEntryAssembly().GetName().Version.ToString(3)),
                 AdditionalNewLineAfterOption = true,
                 AddDashesToOption = true
             };
