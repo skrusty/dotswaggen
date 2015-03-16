@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -15,6 +16,7 @@ namespace dotswaggen
     internal class Program
     {
         private static Options _options;
+        private static Dictionary<string, Type> _converterRegistry;
 
         private static void Main(string[] args)
         {
@@ -25,6 +27,9 @@ namespace dotswaggen
             {
                 return;
             }
+
+            // Populate ConverterRegistry
+            _converterRegistry = new Dictionary<string, Type> {{"c#", typeof(CSharpModel.SwaggerConverter)}};
 
             // TODO: Allow multiple files or input file directory
             ProcessFile(_options.InputFile);
@@ -42,7 +47,7 @@ namespace dotswaggen
 
             try
             {
-                var converter = LoadConverter(json);
+                var converter = LoadConverter(json, _converterRegistry[_options.Model]);
 
                 converter.RegisterSafeTypes();
 
@@ -74,15 +79,15 @@ namespace dotswaggen
             }
         }
 
-        private static ISwaggerConverter LoadConverter(string json)
+        private static BaseSwaggerConverter LoadConverter(string json, Type type)
         {
             var swaggerResource = LoadSwagger(json);
 
             if (swaggerResource.Apis == null)
                 throw new Exception("Could not load JSON as Swagger document");
 
-            var converter = new SwaggerConverter(swaggerResource);
-            return converter;
+            var converterInstance = (BaseSwaggerConverter) Activator.CreateInstance(type, swaggerResource);
+            return converterInstance;
         }
 
         private static ApiDeclaration LoadSwagger(string json)

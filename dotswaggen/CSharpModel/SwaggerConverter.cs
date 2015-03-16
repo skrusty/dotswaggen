@@ -15,7 +15,7 @@ using SwaggerTypes = dotswaggen.Swagger.DataTypeRegistry;
 
 namespace dotswaggen.CSharpModel
 {
-    public class SwaggerConverter : ISwaggerConverter
+    public class SwaggerConverter : Interfaces.BaseSwaggerConverter
     {
         public static Dictionary<DataTypeRegistry.CommonNames, string> SwaggerTypeMappings = new Dictionary
             <DataTypeRegistry.CommonNames, string>
@@ -31,14 +31,12 @@ namespace dotswaggen.CSharpModel
             {DataTypeRegistry.CommonNames.DATETIME, "DateTime"}
         };
 
-        public SwaggerConverter(ApiDeclaration root)
+        public SwaggerConverter(ApiDeclaration root) : base(root)
         {
-            Root = root;
+            
         }
 
-        private ApiDeclaration Root { get; set; }
-
-        public IApi[] Apis
+        public override IApi[] Apis
         {
             get
             {
@@ -91,7 +89,7 @@ namespace dotswaggen.CSharpModel
             }
         }
 
-        public IDataType[] Models
+        public override IDataType[] Models
         {
             get
             {
@@ -133,7 +131,7 @@ namespace dotswaggen.CSharpModel
             }
         }
 
-        public string DefaultExtension
+        public override string DefaultExtension
         {
             get { return "cs"; }
         }
@@ -255,7 +253,7 @@ namespace dotswaggen.CSharpModel
             return maybeValidIdentifier;
         }
 
-        public void RegisterSafeTypes()
+        public override void RegisterSafeTypes()
         {
             //Set up enums required by the CSharp view of the world
             Template.RegisterSafeType(typeof(HttpMethod), o => o.ToString());

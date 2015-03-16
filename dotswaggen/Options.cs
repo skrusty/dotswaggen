@@ -18,7 +18,11 @@ namespace dotswaggen
             HelpText = "The folder to output rendered code to")]
         public string OutputFolder { get; set; }
 
-        [Option("t-prefix", Required = false,
+        [Option('m', "model", Required = false, DefaultValue = "c#",
+            HelpText = "The language model to use (Default 'c#')")]
+        public string Model { get; set; }
+
+        [Option("t-prefix", Required = false, 
             HelpText = "Prefix the template filename for each template type")]
         public string TemplatePrefix { get; set; }
 
