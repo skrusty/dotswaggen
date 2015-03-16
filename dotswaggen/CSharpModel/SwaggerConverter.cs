@@ -15,28 +15,27 @@ using SwaggerTypes = dotswaggen.Swagger.DataTypeRegistry;
 
 namespace dotswaggen.CSharpModel
 {
-    public class SwaggerConverter : Interfaces.BaseSwaggerConverter
+    public class SwaggerConverter : BaseSwaggerConverter
     {
-        public static Dictionary<DataTypeRegistry.CommonNames, string> SwaggerTypeMappings = new Dictionary
-            <DataTypeRegistry.CommonNames, string>
+        public static Dictionary<SwaggerTypes.CommonNames, string> SwaggerTypeMappings = new Dictionary
+            <SwaggerTypes.CommonNames, string>
         {
-            {DataTypeRegistry.CommonNames.INTEGER, "int"},
-            {DataTypeRegistry.CommonNames.LONG, "long"},
-            {DataTypeRegistry.CommonNames.FLOAT, "float"},
-            {DataTypeRegistry.CommonNames.DOUBLE, "double"},
-            {DataTypeRegistry.CommonNames.STRING, "string"},
-            {DataTypeRegistry.CommonNames.BYTE, "byte"},
-            {DataTypeRegistry.CommonNames.BOOLEAN, "bool"},
-            {DataTypeRegistry.CommonNames.DATE, "DateTime"},
-            {DataTypeRegistry.CommonNames.DATETIME, "DateTime"}
+            {SwaggerTypes.CommonNames.INTEGER, "int"},
+            {SwaggerTypes.CommonNames.LONG, "long"},
+            {SwaggerTypes.CommonNames.FLOAT, "float"},
+            {SwaggerTypes.CommonNames.DOUBLE, "double"},
+            {SwaggerTypes.CommonNames.STRING, "string"},
+            {SwaggerTypes.CommonNames.BYTE, "byte"},
+            {SwaggerTypes.CommonNames.BOOLEAN, "bool"},
+            {SwaggerTypes.CommonNames.DATE, "DateTime"},
+            {SwaggerTypes.CommonNames.DATETIME, "DateTime"}
         };
 
         public SwaggerConverter(ApiDeclaration root) : base(root)
         {
-            
         }
 
-        public override IApi[] Apis
+        public override Api[] Apis
         {
             get
             {
@@ -47,40 +46,33 @@ namespace dotswaggen.CSharpModel
                     var api = new Api
                     {
                         Description = swApi.Description,
-                        Path = swApi.Path
+                        Path = swApi.Path,
+                        Operations = swApi.Operations.Select(swOp =>
+                        {
+                            var op = new Operation
+                            {
+                                Method = (HttpMethod) Enum.Parse(typeof (HttpMethod), swOp.Method, true),
+                                Nickname = swOp.Nickname,
+                                ReturnType = GetTypeString(swOp),
+                                Description = swOp.Summary,
+                                Parameters = swOp.Parameters.Select(swP => new Parameter
+                                {
+                                    Location =
+                                        (ParameterType) Enum.Parse(typeof (ParameterType), swP.ParamType, true),
+                                    Name = GetValidIdentifier(swP.Name),
+                                    Type = GetTypeString(swP)
+                                }).ToArray(),
+                                Responses = swOp.ResponseMessages.Select(swResp => new Response
+                                {
+                                    Code = swResp.Code,
+                                    Message = swResp.Message
+                                }).ToArray()
+                            };
+
+                            return op;
+                        }).ToArray()
                     };
 
-                    api.Operations = swApi.Operations.Select(swOp =>
-                    {
-                        var op = new Operation
-                        {
-                            Method = (HttpMethod) Enum.Parse(typeof (HttpMethod), swOp.Method, true),
-                            Nickname = swOp.Nickname,
-                            ReturnType = GetTypeString(swOp),
-                            Description = swOp.Summary
-                        };
-
-                        op.Parameters = swOp.Parameters.Select(swP =>
-                        {
-                            return new Parameter
-                            {
-                                Location = (ParameterType) Enum.Parse(typeof (ParameterType), swP.ParamType, true),
-                                Name = GetValidIdentifier(swP.Name),
-                                Type = GetTypeString(swP)
-                            };
-                        }).ToArray();
-
-                        op.Responses = swOp.ResponseMessages.Select(swResp =>
-                        {
-                            return new Response
-                            {
-                                Code = swResp.Code,
-                                Message = swResp.Message
-                            };
-                        }).ToArray();
-
-                        return op;
-                    }).ToArray();
 
                     apis.Add(api);
                 }
@@ -256,8 +248,8 @@ namespace dotswaggen.CSharpModel
         public override void RegisterSafeTypes()
         {
             //Set up enums required by the CSharp view of the world
-            Template.RegisterSafeType(typeof(HttpMethod), o => o.ToString());
-            Template.RegisterSafeType(typeof(ParameterType), o => o.ToString());
+            Template.RegisterSafeType(typeof (HttpMethod), o => o.ToString());
+            Template.RegisterSafeType(typeof (ParameterType), o => o.ToString());
         }
     }
 }

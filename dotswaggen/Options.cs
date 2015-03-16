@@ -22,7 +22,7 @@ namespace dotswaggen
             HelpText = "The language model to use (Default 'c#')")]
         public string Model { get; set; }
 
-        [Option("t-prefix", Required = false, 
+        [Option("t-prefix", Required = false,
             HelpText = "Prefix the template filename for each template type")]
         public string TemplatePrefix { get; set; }
 
@@ -31,7 +31,7 @@ namespace dotswaggen
         public string OutputPrefix { get; set; }
 
         [Option("o-single-name", Required = false,
-            HelpText = "The filename to write all output to", MutuallyExclusiveSet="o-prefix")]
+            HelpText = "The filename to write all output to", MutuallyExclusiveSet = "o-prefix")]
         public string WriteSingleFileName { get; set; }
 
         [HelpOption]

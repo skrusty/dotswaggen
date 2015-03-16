@@ -5,7 +5,6 @@ using System.Linq;
 using System.Net;
 using CommandLine;
 using dotswaggen.CSharpModel;
-using dotswaggen.CSharpModel.Operations;
 using dotswaggen.Interfaces;
 using dotswaggen.Swagger;
 using DotLiquid;
@@ -29,7 +28,7 @@ namespace dotswaggen
             }
 
             // Populate ConverterRegistry
-            _converterRegistry = new Dictionary<string, Type> {{"c#", typeof(CSharpModel.SwaggerConverter)}};
+            _converterRegistry = new Dictionary<string, Type> {{"c#", typeof (SwaggerConverter)}};
 
             // TODO: Allow multiple files or input file directory
             ProcessFile(_options.InputFile);
@@ -71,7 +70,8 @@ namespace dotswaggen
                     Apis = converter.Apis
                 };
 
-                WriteFile(ApplyTemplate(GetTemplate("Action"), operationFileModel), operationFileModel.Name, converter.DefaultExtension);
+                WriteFile(ApplyTemplate(GetTemplate("Action"), operationFileModel), operationFileModel.Name,
+                    converter.DefaultExtension);
             }
             catch (Exception ex)
             {
