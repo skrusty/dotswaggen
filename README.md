@@ -18,5 +18,7 @@ Usage: dotswaggen -s \<filename.json\> -n test.namespace -o \<directory\>
   --t-prefix         Prefix the template filename for each template type
 
   --o-prefix         Prefix the output filename for each file generated
+  
+  --o-single-name    The filename to write all output to
 
   --help             Display this help screen.
