@@ -25,6 +25,10 @@ namespace dotswaggen
             HelpText = "Prefix the output filename for each file generated")]
         public string OutputPrefix { get; set; }
 
+        [Option("o-single-name", Required = false,
+            HelpText = "The filename to write all output to", MutuallyExclusiveSet="o-prefix")]
+        public string WriteSingleFileName { get; set; }
+
         [HelpOption]
         public string GetUsage()
         {

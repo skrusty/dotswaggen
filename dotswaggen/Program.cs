@@ -104,13 +104,25 @@ namespace dotswaggen
         private static void WriteFile(string renderedCode, string fileName)
         {
             Directory.CreateDirectory(_options.OutputFolder);
-
-            using (
-                var outFile =
-                    File.CreateText(Path.Combine(_options.OutputFolder,
-                        string.Format("{0}{1}.{2}", _options.OutputPrefix, fileName, "cs"))))
+            if (!string.IsNullOrEmpty(_options.WriteSingleFileName))
             {
-                outFile.Write(renderedCode);
+                using (
+                    var outFile =
+                        File.AppendText(Path.Combine(_options.OutputFolder,
+                            string.Format("{0}", _options.WriteSingleFileName))))
+                {
+                    outFile.Write(renderedCode);
+                }
+            }
+            else
+            {
+                using (
+                    var outFile =
+                        File.CreateText(Path.Combine(_options.OutputFolder,
+                            string.Format("{0}{1}.{2}", _options.OutputPrefix, fileName, "cs"))))
+                {
+                    outFile.Write(renderedCode);
+                }
             }
         }
 
