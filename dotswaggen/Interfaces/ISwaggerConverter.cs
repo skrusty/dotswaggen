@@ -6,6 +6,7 @@ namespace dotswaggen.Interfaces
     {
         IApi[] Apis { get; }
         IDataType[] Models { get; }
+        string DefaultExtension { get; }
         void RegisterSafeTypes();
     }
 }

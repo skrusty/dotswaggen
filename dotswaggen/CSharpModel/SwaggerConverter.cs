@@ -133,6 +133,11 @@ namespace dotswaggen.CSharpModel
             }
         }
 
+        public string DefaultExtension
+        {
+            get { return "cs"; }
+        }
+
         public static HashSet<string> ReservedIdentifiers
         {
             get

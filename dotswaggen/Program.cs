@@ -55,7 +55,7 @@ namespace dotswaggen
                         DataType = m
                     };
 
-                    WriteFile(ApplyTemplate(GetTemplate("Model"), typeFileModel), m.Name);
+                    WriteFile(ApplyTemplate(GetTemplate("Model"), typeFileModel), m.Name, converter.DefaultExtension);
                 }
 
                 var operationFileModel = new OperationsFile
@@ -66,7 +66,7 @@ namespace dotswaggen
                     Apis = converter.Apis
                 };
 
-                WriteFile(ApplyTemplate(GetTemplate("Action"), operationFileModel), operationFileModel.Name);
+                WriteFile(ApplyTemplate(GetTemplate("Action"), operationFileModel), operationFileModel.Name, converter.DefaultExtension);
             }
             catch (Exception ex)
             {
@@ -101,7 +101,7 @@ namespace dotswaggen
             return swaggerResource;
         }
 
-        private static void WriteFile(string renderedCode, string fileName)
+        private static void WriteFile(string renderedCode, string fileName, string extension)
         {
             Directory.CreateDirectory(_options.OutputFolder);
             if (!string.IsNullOrEmpty(_options.WriteSingleFileName))
@@ -119,7 +119,7 @@ namespace dotswaggen
                 using (
                     var outFile =
                         File.CreateText(Path.Combine(_options.OutputFolder,
-                            string.Format("{0}{1}.{2}", _options.OutputPrefix, fileName, "cs"))))
+                            string.Format("{0}{1}.{2}", _options.OutputPrefix, fileName, extension))))
                 {
                     outFile.Write(renderedCode);
                 }
