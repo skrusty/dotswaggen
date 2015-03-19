@@ -22,3 +22,7 @@ Usage: dotswaggen -s \<filename.json\> -n test.namespace -o \<directory\>
   --o-single-name    The filename to write all output to
 
   --help             Display this help screen.
+
+## Swagger Spec Support
+Currently we only support Swagger 1.2. 
+1.1 is planned to arrive soon.
