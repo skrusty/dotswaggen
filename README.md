@@ -1,5 +1,5 @@
 # DotSwagGen
-DotSwagGen is a command line code generator for the swagger specification. 
+DotSwagGen is a command line code generator for the swagger specification. It allows you to generate client code for .NET from a simple swagger spec file which defines a REST Api.
 
 ## Templates
 DotSwagGen uses a template engine to create code output in any language for a given swagger specification. 
