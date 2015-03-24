@@ -34,6 +34,12 @@ namespace dotswaggen
             HelpText = "The filename to write all output to", MutuallyExclusiveSet = "o-prefix")]
         public string WriteSingleFileName { get; set; }
 
+        [Option('u', "username", Required=false, HelpText="Username for http basic authentication")]
+        public string Username { get; set; }
+
+        [Option('p', "password", Required = false, HelpText = "Password for http basic authentication")]
+        public string Password { get; set; }
+
         [HelpOption]
         public string GetUsage()
         {

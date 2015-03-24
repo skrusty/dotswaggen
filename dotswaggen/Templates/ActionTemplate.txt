@@ -1,5 +1,4 @@
 ﻿/*
-	Generated with DotSwagGen
 	Generated from  {{ Model.Resourceurl }}
 */
 
@@ -12,6 +11,7 @@ namespace {{ Model.Namespace }}
 	/// <summary>
 	/// {{ Model.Description }}
 	/// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("dotswaggen", "v1")]
 	public class {{ Model.Name }}
 	{
 
