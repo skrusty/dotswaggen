@@ -41,6 +41,8 @@ namespace dotswaggen
             string json;
             using (var webClient = new WebClient())
             {
+                if ( !string.IsNullOrEmpty(_options.Username) )
+                    webClient.Credentials = new System.Net.NetworkCredential(_options.Username, _options.Password ?? string.Empty);
                 json = webClient.DownloadString(inputFile);
             }
 
