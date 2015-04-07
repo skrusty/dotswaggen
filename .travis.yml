@@ -1,2 +1,2 @@
 language: csharp
-solution: dotswaggen/dotswaggen.sln
+solution: ./dotswaggen/dotswaggen.sln
